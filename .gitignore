@@ -11,3 +11,5 @@ src/99-wifi-connect.sh
 src/statistica-web.service
 src/index.html
 src/wifi1.json
+src/statistica.service
+src/monitor.sh
