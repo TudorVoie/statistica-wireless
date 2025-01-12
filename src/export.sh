@@ -3,15 +3,14 @@
 INPUT_DIR="scans"
 OUTPUT_FILE="wifi_scan.json"
 TEMP_FILE="temp.txt"
-API_FILE=$1
-API=$(cat $API_FILE)
+API=$(cat api.key)
 
 > "$TEMP_FILE"
 
 json_escape() {
     echo "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
 }
-t
+
 parse_iwlist_file() {
     local file="$1"
 
@@ -44,12 +43,17 @@ parse_iwlist_file() {
                 MANUFACTURER="Not Found"
             fi
 
+            if [[ "$SSID" == "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" ]]; then
+                SSID="<Hidden Network>"
+            fi
+
             echo "{\"SSID\":\"$SSID\",\"MAC\":\"$MAC\",\"Channel\":$CHANNEL,\"Frequency\":\"$FREQ\",\"Encryption\":\"$ENCRYPTION\",\"Manufacturer\":\"$MANUFACTURER\"}" >> "$TEMP_FILE"
             SSID=""
             MAC=""
             CHANNEL=""
             FREQ=""
             ENCRYPTION=""
+            MANUFACTURER=""
         fi
     done < "$file"
 }
@@ -61,9 +65,16 @@ for file in "$INPUT_DIR"/*.txt; do
     rm "$file"
 done
 
+echo "Removing duplicates (first)..."
 awk '!seen[$0]++' "$TEMP_FILE" | jq -s '.' > "$OUTPUT_FILE"
 
 echo "Removing $TEMP_FILE"
 rm -f "$TEMP_FILE"
+
+echo "Removing dupliates (again)...."
+mv "$OUTPUT_FILE" "temp.json"
+rm -f "$OUTPUT_FILE"
+jq 'unique_by(.SSID, .MAC)' "temp.json" >> "$OUTPUT_FILE"
+rm -f "temp.json"
 
 echo "Combined JSON output saved to $OUTPUT_FILE"
