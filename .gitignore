@@ -3,3 +3,4 @@ src/wifi_scan.txt
 src/temp.txt
 /src/scans
 src/api.key
+src/wifi_scan.json
