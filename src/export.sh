@@ -1,17 +1,19 @@
 #!/bin/bash
 
 INPUT_DIR="scans"
-OUTPUT_FILE="wifi_scan.txt"
+OUTPUT_FILE="wifi_scan.json"
 TEMP_FILE="temp.txt"
 API_FILE=$1
 API=$(cat $API_FILE)
 
-echo "" > "$OUTPUT_FILE" 
+> "$TEMP_FILE"
 
+json_escape() {
+    echo "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+t
 parse_iwlist_file() {
     local file="$1"
-
-    echo "" > "$TEMP_FILE"
 
     SSID=""
     MAC=""
@@ -22,7 +24,7 @@ parse_iwlist_file() {
 
     while IFS= read -r line; do
         if [[ "$line" =~ ESSID:\"(.*)\" ]]; then
-            SSID="${BASH_REMATCH[1]}"
+            SSID=$(json_escape "${BASH_REMATCH[1]}")
         elif [[ "$line" =~ Address:\ ([0-9A-Fa-f:]{17}) ]]; then
             MAC="${BASH_REMATCH[1]}"
         elif [[ "$line" =~ Channel:([0-9]+) ]]; then
@@ -42,19 +44,15 @@ parse_iwlist_file() {
                 MANUFACTURER="Not Found"
             fi
 
-            echo "$SSID $MAC $CHANNEL $FREQ $ENCRYPTION $MANUFACTURER" >> "$TEMP_FILE"
+            echo "{\"SSID\":\"$SSID\",\"MAC\":\"$MAC\",\"Channel\":$CHANNEL,\"Frequency\":\"$FREQ\",\"Encryption\":\"$ENCRYPTION\",\"Manufacturer\":\"$MANUFACTURER\"}" >> "$TEMP_FILE"
             SSID=""
             MAC=""
             CHANNEL=""
             FREQ=""
             ENCRYPTION=""
-            MANUFACTURER=""
         fi
     done < "$file"
-
-    awk '!seen[$0]++' "$TEMP_FILE" >> "$OUTPUT_FILE"
 }
-
 
 for file in "$INPUT_DIR"/*.txt; do
     echo "Processing file: $file"
@@ -63,6 +61,9 @@ for file in "$INPUT_DIR"/*.txt; do
     rm "$file"
 done
 
-awk '!seen[$0]++' "$OUTPUT_FILE" | grep -v '^$' > "$TEMP_FILE" && mv "$TEMP_FILE" "$OUTPUT_FILE"
+awk '!seen[$0]++' "$TEMP_FILE" | jq -s '.' > "$OUTPUT_FILE"
 
-echo "Combined and deduplicated output saved to $OUTPUT_FILE"
+echo "Removing $TEMP_FILE"
+rm -f "$TEMP_FILE"
+
+echo "Combined JSON output saved to $OUTPUT_FILE"
