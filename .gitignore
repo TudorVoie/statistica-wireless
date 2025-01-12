@@ -4,3 +4,10 @@ src/temp.txt
 /src/scans
 src/api.key
 src/wifi_scan.json
+src/statistica-scanner-bun.service
+src/test.html
+src/statistica-scanner.service
+src/99-wifi-connect.sh
+src/statistica-web.service
+src/index.html
+src/wifi1.json
