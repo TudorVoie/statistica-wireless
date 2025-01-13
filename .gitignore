@@ -13,3 +13,7 @@ src/index.html
 src/wifi1.json
 src/statistica.service
 src/monitor.sh
+src/bot.key
+/src/__pycache__
+src/scanner.service
+src/wifi_networks.json
