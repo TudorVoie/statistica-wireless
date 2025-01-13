@@ -17,3 +17,4 @@ src/bot.key
 /src/__pycache__
 src/scanner.service
 src/wifi_networks.json
+src/bot.service
