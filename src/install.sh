@@ -35,6 +35,9 @@ WorkingDirectory=$CURDIR
 [Install]
 WantedBy=multi-user.target" >> bot.service
     echo "Service file generated to bot.service"
+
+    mkdir scans
+
     sudo chmod +x generator.sh
     sudo chmod +x scan.sh
 
